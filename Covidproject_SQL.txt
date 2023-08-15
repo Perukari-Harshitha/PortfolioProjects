@@ -1,0 +1,59 @@
+select * from public.coviddeaths
+where continent is not null
+order by 3,4;
+
+select count(*) from covidvaccinations;
+
+--1. Looking for Total cases vs total deaths.
+select location,date,total_cases,total_deaths, (total_deaths/total_cases)*100 as deathpercentage
+from public.coviddeaths;
+
+select sum(new_cases) as total_cases,sum(cast(new_deaths as float4)) as total_deaths, sum(cast(new_deaths as float4))/sum(new_cases)*100 as deathpercentage
+from public.coviddeaths
+order by 1;
+
+
+
+--2. Total Cases vs Total cases vs population.
+select location,date,total_cases,population, (total_cases/population)*100 as percentofpopulation
+from public.coviddeaths
+where continent is not null
+order by 1,5;
+
+--3. Countries with lowest infection rate compared to population
+select location, Population ,Min(total_cases) as minimuminfectionCases,Min((total_cases/population))*100 as precentpopulationInfected
+from public.coviddeaths
+where continent is not null
+group by location,population
+order by 4;
+
+--4. continents with highest death per population
+select continent,Max(total_deaths) as TotalDeathsCount
+from public.coviddeaths
+WHERE continent IS not NULL AND total_deaths IS NOT null and continent!=''
+group by continent
+order by 2 desc;
+
+
+select * from covidvaccinations;
+--5. lookig for total population vs vaccinations
+
+select d.continent,d.location,extract(year from cast(d.date as DATE)) as year,
+d.population, sum(coalesce (v.new_vaccinations ,0))
+from public.coviddeaths d join public.covidvaccinations v
+on (d.location= v.location and extract(year from cast(d.date as DATE)) = extract(year from cast(d.date as DATE)))
+WHERE d.continent IS not null and d.continent!=''
+group by d.continent,d.location,extract(year from cast(d.date as DATE)),d.population
+;
+
+
+--6.Percentage of people vaccinated in Asia Continent
+select sum(total_vaccinations) , sum(people_vaccinated), sum(people_vaccinated)/sum(total_vaccinations)*100
+from covidvaccinations
+where continent ='Asia' and continent is not null
+order by 1;
+
+
+
+
+
